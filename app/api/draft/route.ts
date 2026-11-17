@@ -32,7 +32,10 @@ export async function POST(req: Request) {
   if (!canFinishEarly(followUps) && followUps < MAX_FOLLOW_UPS) return json({ reason: "too_early" }, 400);
 
   const store = async (title: string, body: string) => {
-    const { error } = await supabase.from("diaries").update({ title, body, status: "drafted" }).eq("id", diary.id);
+    // only if the diary is still as this request read it: a diary the user has since edited or saved is left alone
+    let q = supabase.from("diaries").update({ title, body, status: "drafted" }).eq("id", diary.id).eq("status", diary.status);
+    if (retry) q = q.eq("title", "").eq("body", "");
+    const { error } = await q;
     if (error) throw error;
   };
   const fallback = async () => {
