@@ -1,8 +1,9 @@
-export type Font = { id: string; name: string; family: string; googleFamily: string };
+export type Font = { id: string; name: string; family: string; googleFamily: string; scale: number };
 
 export const DEFAULT_FONT_ID = "gowun-batang";
 
-const font = (id: string, name: string, googleFamily: string, generic: "serif" | "sans-serif" | "cursive"): Font => ({
+const font = (id: string, name: string, googleFamily: string, generic: "serif" | "sans-serif" | "cursive", scale = 1): Font => ({
+  scale,
   id,
   name,
   googleFamily,
@@ -11,14 +12,14 @@ const font = (id: string, name: string, googleFamily: string, generic: "serif" |
 
 export const FONTS: Font[] = [
   font("gowun-batang", "고운바탕", "Gowun Batang", "serif"),
-  font("nanum-pen-script", "나눔손글씨 펜", "Nanum Pen Script", "cursive"),
+  font("nanum-pen-script", "나눔손글씨 펜", "Nanum Pen Script", "cursive", 1.4),
   font("noto-serif-kr", "본명조", "Noto Serif KR", "serif"),
   font("gowun-dodum", "고운돋움", "Gowun Dodum", "sans-serif"),
-  font("gamja-flower", "감자꽃", "Gamja Flower", "cursive"),
-  font("hi-melody", "하이멜로디", "Hi Melody", "cursive"),
+  font("gamja-flower", "감자꽃", "Gamja Flower", "cursive", 1.3),
+  font("hi-melody", "하이멜로디", "Hi Melody", "cursive", 1.3),
   font("nanum-myeongjo", "나눔명조", "Nanum Myeongjo", "serif"),
   font("jua", "주아", "Jua", "sans-serif"),
-  font("poor-story", "푸어스토리", "Poor Story", "cursive"),
+  font("poor-story", "푸어스토리", "Poor Story", "cursive", 1.3),
   font("song-myung", "송명", "Song Myung", "serif"),
 ];
 

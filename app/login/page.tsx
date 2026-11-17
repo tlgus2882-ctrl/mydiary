@@ -1,15 +1,16 @@
-"use client";
-import { createBrowserSupabase } from "@/lib/supabase/browser";
+import { LoginButton } from "./LoginButton";
+import css from "./login.module.css";
 
-export default function LoginPage() {
-  const login = () =>
-    createBrowserSupabase().auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${location.origin}/auth/callback` },
-    });
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
   return (
-    <main>
-      <button onClick={login}>Google로 계속하기</button>
+    <main className={css.main}>
+      <section className={css.card}>
+        <h1 className={css.name}>오늘의 일기</h1>
+        <p className={css.desc}>질문에 답하다 보면 일기가 써져요</p>
+        <LoginButton className={css.btn} />
+        {error && <p role="alert">로그인하지 못했어요. 다시 시도해 주세요.</p>}
+      </section>
     </main>
   );
 }

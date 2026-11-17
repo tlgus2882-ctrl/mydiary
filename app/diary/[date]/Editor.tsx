@@ -75,13 +75,13 @@ export function Editor({ id, date, initialTitle, initialBody, autoDraft, initial
       <ThemeFontPicker themeId={theme.id} fontId={font.id} onTheme={setThemeId} onFont={setFontId} />
       {/* after the picker's subset links, so for the selected font the full CSS wins (same family name) */}
       <link key={font.id} rel="stylesheet" href={fontCssUrl(font)} />
-      <div data-testid="diary-page" className={css.page} style={{ ...theme.vars, fontFamily: font.family } as React.CSSProperties}>
+      <div data-testid="diary-page" className={css.page} style={{ ...theme.vars, fontFamily: font.family, "--font-scale": font.scale } as React.CSSProperties}>
         <h1 className={css.date}>{date}</h1>
         {drafting && <p role="status" className={css.status}>초안을 쓰는 중…</p>}
         {failed && (
           <p role="alert" className={css.status}>
             초안을 만들지 못했어요. 직접 쓰거나{" "}
-            <button type="button" style={{ font: "inherit", textDecoration: "underline" }} onClick={draft}>
+            <button type="button" className={css.link} onClick={draft}>
               다시 시도
             </button>
             해 보세요.
@@ -97,10 +97,10 @@ export function Editor({ id, date, initialTitle, initialBody, autoDraft, initial
         </label>
       </div>
       <div className={css.bar}>
-        <button type="button" disabled={drafting} onClick={save}>
+        <button type="button" className={css.save} disabled={drafting} onClick={save}>
           저장
         </button>
-        {msg && <span role="status">{msg}</span>}
+        {msg && <span role="status" className={css.msg}>{msg}</span>}
       </div>
     </main>
   );

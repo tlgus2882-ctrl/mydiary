@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 오늘의 일기
 
-## Getting Started
+질문에 답하다 보면 일기가 써지는 앱. Claude가 하루를 묻고, 답을 모아 일기 초안을 써 줘요. 테마와 글꼴을 골라 저장하고 지난 일기를 다시 볼 수 있어요.
 
-First, run the development server:
+## 스택
+
+Next.js 15 (App Router) · TypeScript · Supabase (Auth, Postgres, RLS) · Anthropic API · pnpm
+
+## 로컬 실행
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+supabase start        # 로컬 Supabase (Docker 필요)
+pnpm dev              # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env.local`에 필요한 환경 변수 (값은 `supabase status`에서 확인):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`
+- `QUOTA_PER_USER`, `QUOTA_GLOBAL` (일일 대화 한도)
+- `CLAUDE_FAKE=1` (선택: 실제 호출 없이 가짜 응답)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+전체 이름은 `.env.example` 참고. Google 로그인은 Supabase Auth에 Google provider 설정이 필요해요.
 
-## Learn More
+## 테스트
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm test             # 단위 테스트
+supabase db reset && supabase test db   # DB(RLS) 테스트
+pnpm e2e              # Playwright E2E (프로덕션 빌드, CLAUDE_FAKE=1)
+```

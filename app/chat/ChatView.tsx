@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import type { Turn } from "@/lib/claude/protocol";
 import { MAX_ANSWER_LENGTH, MAX_FOLLOW_UPS, canFinishEarly, validateAnswer } from "@/lib/conversation/rules";
 import { localDate } from "@/lib/date";
+import css from "./chat.module.css";
 
 type Pending = { id: string; text: string };
 type Status = "idle" | "sending" | "failed" | "offer" | "user_limit" | "global_limit";
@@ -97,10 +98,10 @@ export function ChatView(props: {
   }
 
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: 16, display: "grid", gap: 12 }}>
-      <header style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+    <main className={css.main}>
+      <header className={css.head}>
         <span>{props.email}</span>
-        <span aria-label={`후속 질문 ${followUps}/${MAX_FOLLOW_UPS}`}>
+        <span className={css.dots} aria-label={`후속 질문 ${followUps}/${MAX_FOLLOW_UPS}`}>
           {Array.from({ length: MAX_FOLLOW_UPS }, (_, i) => (
             <span key={i} data-dot={i < followUps ? "on" : "off"} aria-hidden>
               {i < followUps ? "●" : "○"}
@@ -110,22 +111,23 @@ export function ChatView(props: {
       </header>
 
       {turns.map((t, i) => (
-        <p key={i} style={{ justifySelf: t.role === "user" ? "end" : "start", whiteSpace: "pre-wrap" }}>
+        <p key={i} className={t.role === "user" ? css.a : css.q}>
           {t.content}
         </p>
       ))}
-      {pending && <p style={{ justifySelf: "end", whiteSpace: "pre-wrap" }}>{pending.text}</p>}
-      {streaming && <p style={{ whiteSpace: "pre-wrap" }}>{streaming}</p>}
+      {pending && <p className={css.a}>{pending.text}</p>}
+      {streaming && <p className={css.q}>{streaming}</p>}
 
       {status === "failed" && pending && (
         <p role="alert">
           다음 질문을 받지 못했어요.{" "}
-          <button onClick={() => send(pending)}>다시 시도</button>
+          <button className={css.retry} onClick={() => send(pending)}>다시 시도</button>
         </p>
       )}
-      {NOTICE[status] && <p role="status">{NOTICE[status]}</p>}
+      {NOTICE[status] && <p role="status" className={css.notice}>{NOTICE[status]}</p>}
 
       <textarea
+        className={css.input}
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={onKeyDown}
@@ -139,8 +141,8 @@ export function ChatView(props: {
           {MAX_ANSWER_LENGTH}자까지 보낼 수 있어요 (지금 {input.trim().length}자).
         </p>
       )}
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={submit} disabled={!canSend}>
+      <div className={css.actions}>
+        <button className={css.send} onClick={submit} disabled={!canSend}>
           보내기
         </button>
         <button onClick={() => router.push(`/diary/${diaryDate}`)} disabled={!canFinish}>
