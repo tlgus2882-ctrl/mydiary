@@ -10,7 +10,7 @@ export default async function SettingsPage() {
       <NavLinks />
       <main className={css.main}>
         <h1>설정</h1>
-        <p>{user.email}</p>
+        <p className={css.email}>{user.email}</p>
         <SettingsForm />
       </main>
     </>
