@@ -2,6 +2,8 @@ import { askNextQuestion } from "@/lib/claude/client";
 import type { Turn } from "@/lib/claude/protocol";
 import { findCurrentDiary } from "@/lib/conversation/diary";
 import { FIRST_QUESTION, nextAction, validateAnswer } from "@/lib/conversation/rules";
+import { DEFAULT_FONT_ID } from "@/lib/fonts";
+import { DEFAULT_THEME_ID } from "@/lib/themes";
 import { isAcceptableDate, previousDate } from "@/lib/date";
 import { quotaLimits } from "@/lib/quota";
 import { createAdminSupabase } from "@/lib/supabase/admin";
@@ -36,7 +38,12 @@ export async function POST(req: Request) {
     return json({ reason: "already_written", date: found.entry_date }, 409);
   }
   if (!found) {
-    const { error } = await supabase.from("diaries").insert({ entry_date: date });
+    const { data: pref } = await supabase.from("profiles").select("last_theme_id, last_font_id").maybeSingle();
+    const { error } = await supabase.from("diaries").insert({
+      entry_date: date,
+      theme_id: pref?.last_theme_id ?? DEFAULT_THEME_ID,
+      font_id: pref?.last_font_id ?? DEFAULT_FONT_ID,
+    });
     if (error && error.code !== "23505") throw error; // 23505: a concurrent request created it
     found = await findCurrentDiary(supabase, date as string, prev, now);
     if (!found) throw new Error("diary not found after insert");
