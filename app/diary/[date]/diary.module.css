@@ -25,3 +25,6 @@
 .status { color: var(--diary-accent); margin: 0 0 8px; }
 .bar { display: flex; align-items: center; gap: 12px; }
 .shell { max-width: 672px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.log { max-width: 672px; margin: 0 auto; padding: 0 16px 16px; display: grid; gap: 6px; font-size: 14px; }
+.log p { white-space: pre-wrap; }
+.log p[data-role="user"] { justify-self: end; }
