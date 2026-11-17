@@ -20,14 +20,20 @@ const env = {
 };
 Object.assign(process.env, env); // test helpers read these too
 
+const server = (port: number, extra: Record<string, string> = {}) => ({
+  command: `pnpm exec next dev -p ${port}`,
+  url: `http://localhost:${port}/`,
+  env: { ...env, ...extra },
+  reuseExistingServer: false,
+  timeout: 120_000,
+});
+
 export default defineConfig({
   testDir: "tests/e2e",
-  use: { baseURL: "http://localhost:3100" },
-  webServer: {
-    command: "pnpm exec next dev -p 3100",
-    url: "http://localhost:3100/",
-    env,
-    reuseExistingServer: false,
-    timeout: 120_000,
-  },
+  projects: [
+    { name: "default", testIgnore: /quota\.spec\.ts/, use: { baseURL: "http://localhost:3100" } },
+    // R13 needs a tiny per-user limit; a separate server (and build dir) keeps it out of the other tests.
+    { name: "quota", testMatch: /quota\.spec\.ts/, use: { baseURL: "http://localhost:3101" } },
+  ],
+  webServer: [server(3100), server(3101, { QUOTA_PER_USER: "3", NEXT_DIST_DIR: ".next-quota" })],
 });
