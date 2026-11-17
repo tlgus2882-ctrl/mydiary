@@ -1,1 +1,8 @@
 .superpowers/
+.env*
+!.env.example
+.claude/worktrees/
+node_modules/
+.next/
+playwright-report/
+test-results/

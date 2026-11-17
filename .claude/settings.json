@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(npx playwright test*)",
+      "Bash(supabase start*)",
+      "Bash(supabase stop*)",
+      "Bash(supabase test db*)",
+      "Bash(supabase migration new*)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Read(**/.env*)",
+      "Bash(git push --force*)",
+      "Bash(rm -rf*)",
+      "Bash(supabase db reset --linked*)",
+      "Bash(supabase db push*)",
+      "mcp__dc48d84b-4efd-4348-b7b3-8e5362a8e3f7__execute_sql",
+      "mcp__dc48d84b-4efd-4348-b7b3-8e5362a8e3f7__apply_migration",
+      "mcp__dc48d84b-4efd-4348-b7b3-8e5362a8e3f7__delete_branch",
+      "mcp__dc48d84b-4efd-4348-b7b3-8e5362a8e3f7__pause_project",
+      "Edit(tests/**)",
+      "Edit(supabase/tests/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-tests.sh" }
+        ]
+      }
+    ]
+  }
+}
