@@ -1,12 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ThemeFontPicker } from "@/components/ThemeFontPicker";
 import { splitDraft } from "@/lib/claude/protocol";
+import { FONTS, fontCssUrl } from "@/lib/fonts";
+import css from "./diary.module.css";
+import { THEMES } from "@/lib/themes";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
 
-type Props = { id: string; date: string; initialTitle: string; initialBody: string; autoDraft: boolean };
+type Props = { id: string; date: string; initialTitle: string; initialBody: string; autoDraft: boolean; initialThemeId: string; initialFontId: string };
 
-export function Editor({ id, date, initialTitle, initialBody, autoDraft }: Props) {
+export function Editor({ id, date, initialTitle, initialBody, autoDraft, initialThemeId, initialFontId }: Props) {
+  const [themeId, setThemeId] = useState(initialThemeId);
+  const [fontId, setFontId] = useState(initialFontId);
+  const theme = THEMES.find((t) => t.id === themeId) ?? THEMES[0];
+  const font = FONTS.find((f) => f.id === fontId) ?? FONTS[0];
   const [title, setTitle] = useState(initialTitle);
   const [body, setBody] = useState(initialBody);
   const [drafting, setDrafting] = useState(autoDraft);
@@ -55,33 +63,41 @@ export function Editor({ id, date, initialTitle, initialBody, autoDraft }: Props
 
   async function save() {
     setMsg("");
-    const { error } = await createBrowserSupabase().from("diaries").update({ title, body, status: "saved" }).eq("id", id);
-    setMsg(error ? "저장하지 못했어요. 다시 눌러 주세요." : "저장했어요");
+    const db = createBrowserSupabase();
+    const saved = await db.from("diaries").update({ title, body, status: "saved", theme_id: theme.id, font_id: font.id }).eq("id", id);
+    // user_id comes from the column default (auth.uid()), never from the client
+    const prefs = await db.from("profiles").upsert({ last_theme_id: theme.id, last_font_id: font.id }, { onConflict: "user_id" });
+    setMsg(saved.error || prefs.error ? "저장하지 못했어요. 다시 눌러 주세요." : "저장했어요");
   }
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-3 p-4">
-      <h1 className="text-sm text-gray-500">{date}</h1>
-      {drafting && <p role="status">초안을 쓰는 중…</p>}
-      {failed && (
-        <p role="alert">
-          초안을 만들지 못했어요. 직접 쓰거나{" "}
-          <button type="button" className="underline" onClick={draft}>
-            다시 시도
-          </button>
-          해 보세요.
-        </p>
-      )}
-      <label className="flex flex-col gap-1">
-        제목
-        <input className="rounded border p-2" value={title} disabled={drafting} onChange={(e) => setTitle(e.target.value)} />
-      </label>
-      <label className="flex flex-col gap-1">
-        본문
-        <textarea className="min-h-64 rounded border p-2" value={body} disabled={drafting} onChange={(e) => setBody(e.target.value)} />
-      </label>
-      <div className="flex items-center gap-3">
-        <button type="button" className="rounded border px-4 py-2" disabled={drafting} onClick={save}>
+    <main className={css.shell}>
+      <ThemeFontPicker themeId={theme.id} fontId={font.id} onTheme={setThemeId} onFont={setFontId} />
+      {/* after the picker's subset links, so for the selected font the full CSS wins (same family name) */}
+      <link key={font.id} rel="stylesheet" href={fontCssUrl(font)} />
+      <div data-testid="diary-page" className={css.page} style={{ ...theme.vars, fontFamily: font.family } as React.CSSProperties}>
+        <h1 className={css.date}>{date}</h1>
+        {drafting && <p role="status" className={css.status}>초안을 쓰는 중…</p>}
+        {failed && (
+          <p role="alert" className={css.status}>
+            초안을 만들지 못했어요. 직접 쓰거나{" "}
+            <button type="button" style={{ font: "inherit", textDecoration: "underline" }} onClick={draft}>
+              다시 시도
+            </button>
+            해 보세요.
+          </p>
+        )}
+        <label className={css.field}>
+          <span className={css.label}>제목</span>
+          <input className={css.title} value={title} disabled={drafting} onChange={(e) => setTitle(e.target.value)} />
+        </label>
+        <label className={css.field}>
+          <span className={css.label}>본문</span>
+          <textarea className={css.body} value={body} disabled={drafting} onChange={(e) => setBody(e.target.value)} />
+        </label>
+      </div>
+      <div className={css.bar}>
+        <button type="button" disabled={drafting} onClick={save}>
           저장
         </button>
         {msg && <span role="status">{msg}</span>}

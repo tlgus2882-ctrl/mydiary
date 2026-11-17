@@ -1,0 +1,27 @@
+.page {
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 672px;
+  min-height: 70vh;
+  margin: 0 auto;
+  padding: 22px 22px 18px;
+  border-radius: 6px;
+  color: var(--diary-ink);
+  background: var(--diary-line), var(--diary-bg);
+  background-size: var(--diary-line-size);
+  background-position: var(--diary-line-pos);
+  line-height: var(--diary-line-height);
+  box-shadow: 0 1px 6px rgb(0 0 0 / 0.15);
+}
+.date { font-size: 13px; opacity: 0.7; margin: 0 0 6px; font-weight: normal; }
+.field { display: block; }
+.label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.title, .body {
+  display: block; width: 100%; box-sizing: border-box; padding: 0; border: 0; outline: 0; resize: none;
+  font: inherit; color: inherit; background: transparent; line-height: inherit;
+}
+.title { font-size: var(--diary-title-size); margin-bottom: 6px; }
+.body { font-size: var(--diary-body-size); min-height: 16rem; }
+.status { color: var(--diary-accent); margin: 0 0 8px; }
+.bar { display: flex; align-items: center; gap: 12px; }
+.shell { max-width: 672px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
