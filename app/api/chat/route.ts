@@ -27,23 +27,28 @@ export async function POST(req: Request) {
   const prev = typeof date === "string" ? previousDate(date) : null;
   if (!prev) return json({ reason: "bad_date" }, 400);
 
-  // 1. diary: continue the in-progress one (keeps its own entry_date across midnight), else create today's
-  let found = await findCurrentDiary(supabase, date as string, prev);
-  if (found && found.status !== "in_progress") return json({ reason: "already_written" }, 409);
+  // 1. diary: continue yesterday's in-progress one across midnight (keeps its entry_date), else today's
+  const now = new Date();
+  let found = await findCurrentDiary(supabase, date as string, prev, now);
+  const crossedMidnight = found?.entry_date === prev;
+  if (!crossedMidnight && !isAcceptableDate(date as string, now)) return json({ reason: "bad_date" }, 400);
+  if (found && found.status !== "in_progress") {
+    return json({ reason: "already_written", date: found.entry_date }, 409);
+  }
   if (!found) {
-    if (!isAcceptableDate(date as string, new Date())) return json({ reason: "bad_date" }, 400);
     const { error } = await supabase.from("diaries").insert({ entry_date: date });
     if (error && error.code !== "23505") throw error; // 23505: a concurrent request created it
-    found = await findCurrentDiary(supabase, date as string, prev);
+    found = await findCurrentDiary(supabase, date as string, prev, now);
     if (!found) throw new Error("diary not found after insert");
-    const first = await supabase
-      .from("diary_messages")
-      .upsert(
-        { diary_id: found.id, role: "assistant", content: FIRST_QUESTION, seq: 0 },
-        { onConflict: "diary_id,seq", ignoreDuplicates: true },
-      );
-    if (first.error) throw first.error;
   }
+  // always (not only on create): a request that died between creating the diary and this line left no seq 0
+  const first = await supabase
+    .from("diary_messages")
+    .upsert(
+      { diary_id: found.id, role: "assistant", content: FIRST_QUESTION, seq: 0 },
+      { onConflict: "diary_id,seq", ignoreDuplicates: true },
+    );
+  if (first.error) throw first.error;
 
   const diary = found;
 
@@ -65,6 +70,8 @@ export async function POST(req: Request) {
       .from("diary_messages")
       .insert({ diary_id: diary.id, role: "user", content: valid.value, seq, client_turn_id: clientTurnId });
     if (error && error.code !== "23505") throw error;
+    const touch = await supabase.from("diaries").update({ updated_at: now.toISOString() }).eq("id", diary.id);
+    if (touch.error) throw touch.error;
     msgs = await load();
     idx = msgs.findIndex((m) => m.client_turn_id === clientTurnId);
     if (idx === -1) return json({ reason: "conflict" }, 409); // seq taken by another turn; client can retry

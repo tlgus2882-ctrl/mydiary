@@ -56,6 +56,10 @@ export function ChatView(props: {
         setStatus(reason === "global_limit" ? "global_limit" : "user_limit");
         return;
       }
+      if (res.status === 409) {
+        const { reason, date } = await res.json();
+        if (reason === "already_written") return router.push(`/diary/${date}`);
+      }
       if (!res.ok || !res.body) throw new Error(`chat ${res.status}`);
       const date = res.headers.get("X-Diary-Date")!;
       setDiaryDate(date);

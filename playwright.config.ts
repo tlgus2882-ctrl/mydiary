@@ -21,11 +21,12 @@ const env = {
 Object.assign(process.env, env); // test helpers read these too
 
 const server = (port: number, extra: Record<string, string> = {}) => ({
-  command: `pnpm exec next dev -p ${port}`,
+  // Production server: no on-demand compiles (timing flakes) and no dev overlay elements in the DOM.
+  command: `pnpm exec next build --turbopack && pnpm exec next start -p ${port}`,
   url: `http://localhost:${port}/`,
   env: { ...env, ...extra },
   reuseExistingServer: false,
-  timeout: 120_000,
+  timeout: 300_000,
 });
 
 export default defineConfig({

@@ -11,7 +11,7 @@ export default async function ChatPage() {
   const { supabase, user } = await requireUser();
   const date = (await cookies()).get("tz-date")?.value ?? "";
   const prev = previousDate(date);
-  if (!prev) return null; // <TzDate> sets the cookie and reloads
+  if (!prev) return null; // <TzDate> sets the cookie and refreshes
   const diary = await findCurrentDiary(supabase, date, prev);
   if (diary && diary.status !== "in_progress") redirect(`/diary/${diary.entry_date}`);
 
@@ -33,6 +33,6 @@ export default async function ChatPage() {
     }
   }
   return (
-    <ChatView email={user.email ?? ""} initialTurns={turns} unanswered={unanswered} diaryDate={diary?.entry_date ?? null} />
+    <ChatView key={date} email={user.email ?? ""} initialTurns={turns} unanswered={unanswered} diaryDate={diary?.entry_date ?? null} />
   );
 }
