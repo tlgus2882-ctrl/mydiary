@@ -4,6 +4,7 @@ import type { Turn } from "@/lib/claude/protocol";
 import { findCurrentDiary } from "@/lib/conversation/diary";
 import { FIRST_QUESTION } from "@/lib/conversation/rules";
 import { previousDate } from "@/lib/date";
+import { NavLinks } from "@/components/NavLinks";
 import { requireUser } from "@/lib/supabase/server";
 import { ChatView } from "./ChatView";
 
@@ -33,6 +34,9 @@ export default async function ChatPage() {
     }
   }
   return (
-    <ChatView key={date} email={user.email ?? ""} initialTurns={turns} unanswered={unanswered} diaryDate={diary?.entry_date ?? null} />
+    <>
+      <NavLinks />
+      <ChatView key={date} email={user.email ?? ""} initialTurns={turns} unanswered={unanswered} diaryDate={diary?.entry_date ?? null} />
+    </>
   );
 }
