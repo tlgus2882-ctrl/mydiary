@@ -13,6 +13,7 @@ const theme = (
   line = "none",
   lineSize = "auto",
   lineHeight = "1.9",
+  big = false, // handwriting themes read small at 15px
 ): Theme => ({
   id,
   name,
@@ -24,6 +25,9 @@ const theme = (
     "--diary-line": line,
     "--diary-line-size": lineSize,
     "--diary-line-height": lineHeight,
+    "--diary-line-pos": line.startsWith("repeating") ? "0 56px" : "0 0", // ruled lines sit under the text
+    "--diary-title-size": big ? "28px" : "20px",
+    "--diary-body-size": big ? "22px" : "15px",
   },
 });
 
@@ -32,7 +36,7 @@ const grid = (c: string) => `linear-gradient(${c} 1px, transparent 1px), linear-
 
 export const THEMES: Theme[] = [
   theme("cream", "크림 종이", "#f8f1e3", "#4a3b2a", "#8a7a63", "#b5651d", ruled("#e3d5bb"), "auto", "28px"),
-  theme("pen", "모눈 손글씨", "#fffdf7", "#2b4a6f", "#6f86a3", "#d9534f", grid("#e9eef5"), "22px 22px", "22px"),
+  theme("pen", "모눈 손글씨", "#fffdf7", "#2b4a6f", "#6f86a3", "#d9534f", grid("#e9eef5"), "22px 22px", "22px", true),
   theme("night", "밤하늘", "linear-gradient(160deg, #1b2340, #2c2a4a)", "#e6e1f5", "#a39fc0", "#f3d58b"),
   theme("minimal", "미니멀", "#ffffff", "#222222", "#888888", "#222222"),
   theme("cherry", "벚꽃", "#fff0f3", "#5a3a45", "#a07a86", "#e0657f", ruled("#f6d3db"), "auto", "28px"),
