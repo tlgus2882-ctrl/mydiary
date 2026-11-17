@@ -3,7 +3,8 @@ export type Turn = { role: "assistant" | "user"; content: string };
 const MAX_PREFIX_WAIT = 20;
 const PREFIXES = ["READY|", "MORE|"];
 
-export function parseReadyPrefix(buffer: string): { ready: boolean; rest: string } | null {
+export function parseReadyPrefix(raw: string): { ready: boolean; rest: string } | null {
+  const buffer = raw.trimStart(); // models sometimes start with a newline; never leak "MORE|"
   for (const p of PREFIXES) {
     if (buffer.startsWith(p)) return { ready: p === "READY|", rest: buffer.slice(p.length) };
   }
