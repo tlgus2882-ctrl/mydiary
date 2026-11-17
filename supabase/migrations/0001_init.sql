@@ -93,6 +93,10 @@ begin
   if p_user_id is null then
     raise exception 'consume_quota: user id required';
   end if;
+  -- 비교가 NULL이면 통과되므로 한도가 비었거나 잘못되면 막는다(fail closed)
+  if p_per_user is null or p_global is null or p_per_user < 1 or p_global < 0 then
+    raise exception 'consume_quota: invalid limits (per_user %, global %)', p_per_user, p_global;
+  end if;
   if p_kind is null or p_kind not in ('question', 'draft') then
     raise exception 'consume_quota: invalid kind %', p_kind;
   end if;
