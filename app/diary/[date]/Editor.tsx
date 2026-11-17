@@ -10,7 +10,7 @@ export function Editor({ id, date, initialTitle, initialBody, autoDraft }: Props
   const [title, setTitle] = useState(initialTitle);
   const [body, setBody] = useState(initialBody);
   const [drafting, setDrafting] = useState(autoDraft);
-  const [failed, setFailed] = useState(!autoDraft && !initialTitle && !initialBody);
+  const [failed, setFailed] = useState(false); // only after a failed attempt in this session
   const [msg, setMsg] = useState("");
   const started = useRef(false);
 
