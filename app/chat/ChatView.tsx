@@ -20,6 +20,7 @@ export function ChatView(props: {
   initialTurns: Turn[];
   unanswered: Pending | null;
   diaryDate: string | null;
+  welcomeBack?: boolean;
 }) {
   const router = useRouter();
   const [turns, setTurns] = useState(props.initialTurns);
@@ -29,7 +30,11 @@ export function ChatView(props: {
   const [input, setInput] = useState("");
   const [diaryDate, setDiaryDate] = useState(props.diaryDate);
   const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []); // typing before hydration would be lost
+  const [coarse, setCoarse] = useState(false); // touch devices have no Shift+Enter
+  useEffect(() => {
+    setHydrated(true); // typing before hydration would be lost
+    setCoarse(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
   const busy = useRef(false); // state updates are async; a ref blocks a fast second click (RF2)
 
   const followUps = turns.filter((t) => t.role === "assistant").length - 1;
@@ -101,6 +106,7 @@ export function ChatView(props: {
     <main className={css.main}>
       <header className={css.head}>
         <span>{props.email}</span>
+        <span className={css.progress}>
         <span className={css.dots} aria-label={`후속 질문 ${followUps}/${MAX_FOLLOW_UPS}`}>
           {Array.from({ length: MAX_FOLLOW_UPS }, (_, i) => (
             <span key={i} data-dot={i < followUps ? "on" : "off"} aria-hidden>
@@ -108,7 +114,10 @@ export function ChatView(props: {
             </span>
           ))}
         </span>
+        <span>{followUps}/{MAX_FOLLOW_UPS}</span>
+        </span>
       </header>
+      {props.welcomeBack && turns.length === 1 && <p className={css.welcome}>다시 와 주셨네요. 오늘 하루만 편하게 적어 보아요.</p>}
 
       {turns.map((t, i) => (
         <p key={i} className={t.role === "user" ? css.a : css.q}>
@@ -134,7 +143,7 @@ export function ChatView(props: {
         rows={4}
         disabled={!hydrated}
         aria-label="답변"
-        placeholder="자유롭게 적어 주세요 (Shift+Enter 줄바꿈)"
+        placeholder={coarse ? "자유롭게 적어 주세요" : "자유롭게 적어 주세요 (Shift+Enter 줄바꿈)"}
       />
       {!valid.ok && valid.reason === "too_long" && (
         <p role="alert">
@@ -148,6 +157,7 @@ export function ChatView(props: {
         <button onClick={() => router.push(`/diary/${diaryDate}`)} disabled={!canFinish}>
           이제 일기 쓰기
         </button>
+        {!canFinishEarly(followUps) && !quota && <span className={css.hint}>질문 3개에 답하면 일기를 쓸 수 있어요</span>}
       </div>
     </main>
   );
