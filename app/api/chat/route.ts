@@ -120,6 +120,8 @@ export async function POST(req: Request) {
           c.enqueue(chunk);
         },
         async flush() {
+          // a bare "MORE|"/"READY|": storing it would send an empty turn later; erroring lets the client retry
+          if (!text.trim()) throw new Error("empty question");
           const { error } = await supabase
             .from("diary_messages")
             .insert({ diary_id: diary.id, role: "assistant", content: text.trim(), seq: msgs[idx].seq + 1 });
