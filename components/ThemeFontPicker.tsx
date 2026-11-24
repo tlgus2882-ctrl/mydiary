@@ -2,9 +2,9 @@ import { FONTS, fontCssUrl } from "@/lib/fonts";
 import { THEMES } from "@/lib/themes";
 import css from "./picker.module.css";
 
-type Props = { themeId: string; fontId: string; onTheme: (id: string) => void; onFont: (id: string) => void };
+type Props = { themeId: string; fontId: string; sizeId: string; sizes: { id: string; name: string }[]; onSize: (id: string) => void; onTheme: (id: string) => void; onFont: (id: string) => void };
 
-export function ThemeFontPicker({ themeId, fontId, onTheme, onFont }: Props) {
+export function ThemeFontPicker({ themeId, fontId, sizeId, sizes, onSize, onTheme, onFont }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <fieldset className={css.group} role="radiogroup" aria-label="테마">
@@ -16,6 +16,15 @@ export function ThemeFontPicker({ themeId, fontId, onTheme, onFont }: Props) {
               <b>가나다</b>
               {t.name}
             </span>
+          </label>
+        ))}
+      </fieldset>
+      <fieldset className={css.group} role="radiogroup" aria-label="글씨 크기">
+        <legend className={css.legend}>글씨 크기</legend>
+        {sizes.map((z) => (
+          <label key={z.id} className={css.opt}>
+            <input type="radio" name="size" checked={z.id === sizeId} onChange={() => onSize(z.id)} />
+            <span className={css.sample}>{z.name}</span>
           </label>
         ))}
       </fieldset>
