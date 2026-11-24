@@ -35,6 +35,8 @@ function claudeText(system: string, history: Turn[], maxTokens: number): Readabl
     system,
     messages: toMessages(history),
   });
+  // The SDK calls Promise.reject on 'abort' when nothing listens for it (unhandled rejection on cancel).
+  stream.on("abort", () => {});
   // The SDK can emit end after error/abort (and after our cancel); the controller throws if touched twice.
   let settled = false;
   return new ReadableStream({
