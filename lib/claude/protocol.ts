@@ -15,9 +15,14 @@ export function parseReadyPrefix(raw: string): { ready: boolean; rest: string } 
   return { ready: false, rest: buffer };
 }
 
+const stripEmphasis = (s: string) => s.replace(/(\*\*|__)/g, "");
+const stripMd = (s: string) => stripEmphasis(s).replace(/^[ \t]*(#+|-)[ \t]+/gm, "");
+const cleanTitle = (s: string) =>
+  stripEmphasis(s.replace(/^[#\s]+/, "")).replace(/^["'“”‘’\s]+|["'“”‘’\s]+$/g, "");
+
 export function splitDraft(text: string): { title: string; body: string } {
   const t = text.trim();
   const i = t.indexOf("\n");
   if (i === -1) return { title: "", body: t };
-  return { title: t.slice(0, i).replace(/^[#\s]+/, "").trim(), body: t.slice(i + 1).trim() };
+  return { title: cleanTitle(t.slice(0, i)), body: stripMd(t.slice(i + 1)).trim() };
 }
