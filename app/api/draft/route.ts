@@ -49,7 +49,10 @@ export async function POST(req: Request) {
     ...quotaLimits(),
   });
   if (quota.error) throw quota.error;
-  if (quota.data !== "ok") return fallback();
+  if (quota.data !== "ok") {
+    console.warn("draft fallback: quota", quota.data);
+    return fallback();
+  }
 
   // read the first chunk before answering, so a Claude failure can still become the JSON fallback
   const encoder = new TextEncoder();
@@ -58,7 +61,8 @@ export async function POST(req: Request) {
   try {
     reader = writeDraft(history).getReader();
     first = await reader.read();
-  } catch {
+  } catch (e) {
+    console.error("draft fallback: claude", e);
     return fallback();
   }
 
