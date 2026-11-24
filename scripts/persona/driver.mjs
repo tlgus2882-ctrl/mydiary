@@ -2,11 +2,11 @@
 // decide in character, and act. State lives in the app (DB) + a per-persona browser profile.
 // Usage: node scripts/persona/driver.mjs <P1|P2|P3> <command> [args...]
 //   login | state | answer "<text>" | finish | wait-draft | redraft
-//   preview "<테마 이름|->" "<폰트 이름|->"            (look only, nothing saved)
-//   save "<제목|->" "<본문|->" "<테마|->" "<폰트|->"   (apply in one go, then 저장; "-" = keep)
+//   preview "<테마|->" "<폰트|->" ["<글씨 크기|->"]   (look only, nothing saved)
+//   save "<제목|->" "<본문|->" "<테마|->" "<폰트|->" ["<글씨 크기|->"]   (apply in one go, then 저장)
 //   goto <path> | shot <name>
 // Each call reopens the browser at the last URL, so unsaved edits never carry over.
-// Env: BASE_URL (default http://localhost:3200), NEXT_PUBLIC_SUPABASE_URL,
+// Env: PERSONA_TAG (fresh accounts, e.g. v2), PERSONA_OUT (output dir), BASE_URL (default http://localhost:3200), NEXT_PUBLIC_SUPABASE_URL,
 //      NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (local Supabase only).
 import { chromium, devices } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
@@ -32,7 +32,7 @@ const PERSONAS = {
 };
 
 const [id, cmd, ...args] = process.argv.slice(2);
-const P = PERSONAS[id];
+const P = PERSONAS[id] && { ...PERSONAS[id], email: process.env.PERSONA_TAG ? PERSONAS[id].email.replace("@", `+${process.env.PERSONA_TAG}@`) : PERSONAS[id].email };
 if (!P || !cmd) {
   console.error("usage: driver.mjs <P1|P2|P3> <command> [args]");
   process.exit(2);
@@ -91,6 +91,18 @@ try {
       await screen("login");
       break;
     }
+    case "seed-past": {
+      // test setup only (local DB): a saved diary N days ago, so the "welcome back" path can be exercised
+      const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      const u = list.users.find((x) => x.email === P.email);
+      if (!u) throw new Error("login first");
+      const d = new Date(Date.now() - Number(args[0] ?? 3) * 86400000 + 9 * 3600000).toISOString().slice(0, 10);
+      const { error } = await admin.from("diaries").upsert({ user_id: u.id, entry_date: d, status: "saved", title: "지난 기록", body: "예전에 쓴 일기." }, { onConflict: "user_id,entry_date" });
+      if (error) throw error;
+      console.log("seeded saved diary on", d);
+      break;
+    }
     case "state":
       await page.goto(BASE + "/");
       await page.waitForTimeout(1500);
@@ -125,16 +137,21 @@ try {
       console.log("--- 본문 칸 ---\n" + (await page.getByLabel("본문").inputValue().catch(() => "")));
       break;
     case "redraft":
-      await page.getByRole("button", { name: /초안 만들기|다시 시도/ }).click();
+      page.once("dialog", (dlg) => dlg.accept());
+      await page.getByRole("button", { name: /초안 만들기|다시 시도|초안 다시 만들기/ }).first().click();
       await page.waitForTimeout(1000);
       await page.waitForFunction(() => !document.querySelector("label input:not([type=radio])")?.disabled, null, { timeout: 120_000 }).catch(() => {});
       await screen("redraft");
       break;
     case "preview":
     case "save": {
-      const [a, b, c, d] = cmd === "preview" ? [undefined, undefined, args[0], args[1]] : args;
+      const [a, b, c, d, e] = cmd === "preview" ? [undefined, undefined, args[0], args[1], args[2]] : args;
       if (a && a !== "-") await page.getByLabel("제목").fill(a);
       if (b && b !== "-") await page.getByLabel("본문").fill(b);
+      const deco = page.getByRole("button", { name: "꾸미기" });
+      if ((c && c !== "-") || (d && d !== "-") || (e && e !== "-"))
+        if ((await deco.count()) && (await deco.getAttribute("aria-expanded")) === "false") await deco.click();
+      if (e && e !== "-") await page.getByRole("radiogroup", { name: "글씨 크기" }).getByRole("radio", { name: e }).check({ force: true });
       if (c && c !== "-") await page.getByRole("radiogroup", { name: "테마" }).getByRole("radio", { name: c }).check({ force: true });
       if (d && d !== "-") await page.getByRole("radiogroup", { name: "글꼴" }).getByRole("radio", { name: d }).check({ force: true });
       if (cmd === "save") {
