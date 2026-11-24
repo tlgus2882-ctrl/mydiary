@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { previousDate } from "@/lib/date";
 import { DEFAULT_FONT_ID } from "@/lib/fonts";
 import { DEFAULT_THEME_ID } from "@/lib/themes";
 import { NavLinks } from "@/components/NavLinks";
@@ -13,6 +14,7 @@ export default async function DiaryPage({
 }) {
   const { supabase } = await requireUser();
   const { date } = await params;
+  if (!previousDate(date)) notFound(); // not a real YYYY-MM-DD: the date cast in Postgres would 500
   const { data, error } = await supabase
     .from("diaries")
     .select("id, status, title, body, theme_id, font_id")
