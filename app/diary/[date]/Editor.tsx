@@ -18,6 +18,7 @@ export function Editor({ id, date, initialTitle, initialBody, autoDraft, initial
   const [title, setTitle] = useState(initialTitle);
   const [body, setBody] = useState(initialBody);
   const [drafting, setDrafting] = useState(autoDraft);
+  const canDraft = !drafting && !title && !body; // empty drafted diary (failed earlier): offer a draft
   const [failed, setFailed] = useState(false); // only after a failed attempt in this session
   const [msg, setMsg] = useState("");
   const started = useRef(false);
@@ -86,6 +87,11 @@ export function Editor({ id, date, initialTitle, initialBody, autoDraft, initial
             </button>
             해 보세요.
           </p>
+        )}
+        {canDraft && !failed && (
+          <button type="button" className={css.link} onClick={draft}>
+            초안 만들기
+          </button>
         )}
         <label className={css.field}>
           <span className={css.label}>제목</span>
