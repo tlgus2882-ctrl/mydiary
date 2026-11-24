@@ -21,8 +21,8 @@ export async function POST(req: Request) {
   if (found.error) throw found.error;
   const diary = found.data;
   if (!diary) return json({ reason: "not_found" }, 404);
-  // a failed draft (status drafted, nothing in it) may be retried; nothing else may be regenerated
-  const retry = diary.status === "drafted" && diary.title === "" && diary.body === "";
+  // a diary with nothing in it (failed draft, or saved empty) may be regenerated; nothing else may be
+  const retry = (diary.status === "drafted" || diary.status === "saved") && diary.title === "" && diary.body === "";
   if (diary.status !== "in_progress" && !retry) return json({ reason: "not_in_progress" }, 409);
 
   const { data, error } = await supabase.from("diary_messages").select("role, content").eq("diary_id", diary.id).order("seq");
