@@ -95,5 +95,11 @@ export async function askNextQuestion(
 }
 
 export function writeDraft(history: Turn[]): ReadableStream<string> {
-  return isFake() ? oneShot("가짜 제목\n가짜 본문") : claudeText(DRAFT_SYSTEM, history, 1500);
+  if (isFake()) return oneShot("가짜 제목\n가짜 본문");
+  // The user may stop right after a question; current models reject an assistant-final conversation (prefill).
+  const turns: Turn[] =
+    history.at(-1)?.role === "assistant"
+      ? [...history, { role: "user", content: "(대화를 마칩니다. 위 대화로 일기를 써 주세요.)" }]
+      : history;
+  return claudeText(DRAFT_SYSTEM, turns, 1500);
 }
