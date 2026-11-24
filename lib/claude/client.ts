@@ -14,26 +14,36 @@ function oneShot(text: string): ReadableStream<string> {
   });
 }
 
-// The API needs user-first alternation; the fixed first question is an assistant turn,
-// so a short user turn is prepended (smaller than rewriting the system prompt).
-function toMessages(history: Turn[]) {
-  const msgs = history.map((t) => ({
-    role: t.role,
-    content: t.role === "user" ? `<answer>${t.content}</answer>` : t.content,
-  }));
-  return msgs[0]?.role === "assistant"
-    ? [{ role: "user" as const, content: "(일기 대화를 시작합니다)" }, ...msgs]
-    : msgs;
+// The API needs user-first alternation of non-empty turns. Empty turns (a stored question that was only
+// "MORE|") are dropped and same-role neighbours joined. The fixed first question is an assistant turn,
+// so a short user turn is prepended; `closing` (an instruction, so not wrapped as an <answer>) is
+// appended when the conversation ends on a question.
+function toMessages(history: Turn[], closing?: string) {
+  const msgs: { role: Turn["role"]; content: string }[] = [];
+  for (const t of history) {
+    if (!t.content.trim()) continue;
+    const content = t.role === "user" ? `<answer>${t.content}</answer>` : t.content;
+    const last = msgs.at(-1);
+    if (last?.role === t.role) last.content += `\n${content}`;
+    else msgs.push({ role: t.role, content });
+  }
+  if (msgs[0]?.role === "assistant") msgs.unshift({ role: "user", content: "(일기 대화를 시작합니다)" });
+  if (closing && msgs.at(-1)?.role === "assistant") msgs.push({ role: "user", content: closing });
+  return msgs;
 }
 
-function claudeText(system: string, history: Turn[], maxTokens: number): ReadableStream<string> {
+function claudeText(
+  system: string,
+  messages: ReturnType<typeof toMessages>,
+  maxTokens: number,
+): ReadableStream<string> {
   const model = process.env.ANTHROPIC_MODEL;
   if (!model) throw new Error("ANTHROPIC_MODEL is not set (or set CLAUDE_FAKE=1)");
   const stream = new Anthropic().messages.stream({
     model,
     max_tokens: maxTokens,
     system,
-    messages: toMessages(history),
+    messages,
   });
   // The SDK calls Promise.reject on 'abort' when nothing listens for it (unhandled rejection on cancel).
   stream.on("abort", () => {});
@@ -70,7 +80,7 @@ export async function askNextQuestion(
     const n = history.filter((t) => t.role === "assistant").length;
     return { ready: n >= 3, stream: oneShot(`그때 기분이 어떠셨어요? (가짜 질문 ${n})`) };
   }
-  const reader = claudeText(QUESTION_SYSTEM, history, 400).getReader();
+  const reader = claudeText(QUESTION_SYSTEM, toMessages(history), 400).getReader();
   let buf = "";
   for (;;) {
     const { done, value } = await reader.read();
@@ -99,9 +109,5 @@ export async function askNextQuestion(
 export function writeDraft(history: Turn[]): ReadableStream<string> {
   if (isFake()) return oneShot("가짜 제목\n가짜 본문");
   // The user may stop right after a question; current models reject an assistant-final conversation (prefill).
-  const turns: Turn[] =
-    history.at(-1)?.role === "assistant"
-      ? [...history, { role: "user", content: "(대화를 마칩니다. 위 대화로 일기를 써 주세요.)" }]
-      : history;
-  return claudeText(DRAFT_SYSTEM, turns, 1500);
+  return claudeText(DRAFT_SYSTEM, toMessages(history, "(대화를 마칩니다. 위 대화로 일기를 써 주세요.)"), 1500);
 }
