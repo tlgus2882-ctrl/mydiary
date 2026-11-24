@@ -67,20 +67,26 @@ export async function POST(req: Request) {
   }
 
   let text = "";
+  let gone = false; // the client disconnected: keep reading Claude so the finished draft is still stored
   const out = new ReadableStream<Uint8Array>({
     async start(controller) {
+      let claudeDone = false;
       try {
         for (let r = first; !r.done; r = await reader.read()) {
           text += r.value;
-          controller.enqueue(encoder.encode(r.value));
+          if (!gone) controller.enqueue(encoder.encode(r.value));
         }
+        claudeDone = true;
         const { title, body } = splitDraft(text);
         await store(title, body);
-        controller.close();
+        if (!gone) controller.close();
       } catch (e) {
-        await store("", "").catch(() => {});
-        controller.error(e);
+        if (!claudeDone) await store("", "").catch(() => {});
+        if (!gone) controller.error(e);
       }
+    },
+    cancel() {
+      gone = true;
     },
   });
   return new Response(out, { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
