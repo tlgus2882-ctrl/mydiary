@@ -1,7 +1,7 @@
 # 진행 상황
 
 ## 현재 (2026-11-24)
-- **운영 배포 완료:** https://mydiary-sigma.vercel.app (main, PR #30). 프리뷰에서 실제 Claude API 스모크 통과 (`docs/smoke/2026-11-24.md`), 최종 전체 리뷰 통과.
+- **운영 배포 완료:** https://mydiary-sigma.vercel.app (main, v1 PR #30 → v2 PR #55, 페르소나 개선 반영). 프리뷰에서 실제 Claude API 스모크 통과 (`docs/smoke/2026-11-24.md`), 최종 전체 리뷰 통과.
 - 남은 확인: 다른 구글 계정으로 남의 일기 URL 접근 → 404 (운영 미실시). 초안 도중 이탈 후 서버 저장이 Vercel에서 끝까지 되는지 (미확인, 필요하면 next/server `after()`).
 - 미뤄 둔 작은 이슈 목록은 최종 리뷰 분류 기준 "나중에 해도 됨"만 남음 (빈 질문 재시도 시 사용량 1회 추가 차감 등).
 - 배포: `beta` 푸시 → Vercel 프리뷰 자동, `main` 머지 → 운영 자동. CLI 수동 배포는 항상 `vercel deploy --target preview`.
