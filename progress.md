@@ -1,15 +1,10 @@
 # 진행 상황
 
-## 현재 (2026-11-17 세션 종료 시점)
-- beta에 머지 완료: Task 1~9 + Task 9b(화면 다듬기, 계획에 추가). 기능은 로컬에서 모두 동작 (단위 39, DB pgTAP, E2E 38 통과, 가짜 Claude 모드 기준).
-- 다음 할 일: **Task 10 배포 + 스모크** (계획 문서 Task 10), 그다음 **전체 브랜치 최종 리뷰**, 그다음 beta → main (사용자 확인 후).
-- 실행 방식: superpowers subagent-driven-development. 진행 원장(상세 기록, 판정, 미뤄 둔 작은 이슈 목록): `.superpowers/sdd/2026-11-17-diary-app/progress.md` (gitignore, 로컬에만 있음). 이어서 할 때 그 원장부터 읽는다.
-
-## Task 10에서 사용자가 직접 할 일
-- Supabase 원격 프로젝트 확인(`supabase link`는 사용자 확인 후), 마이그레이션 원격 반영 `supabase db push`는 사용자가 실행.
-- Supabase 대시보드: Google 공급자 켜기(Google Cloud OAuth 클라이언트), 이메일 가입 끄기, Site URL·Redirect URL에 Vercel 운영·프리뷰 주소.
-- Vercel: 프로젝트 연결, 환경변수 값 입력 (README의 목록. 운영에는 `CLAUDE_FAKE`를 넣지 않는다).
-- 실제 Claude API로 대화 한 번 수동 확인 (아직 가짜 모드로만 테스트됨).
+## 현재 (2026-11-24)
+- **운영 배포 완료:** https://mydiary-sigma.vercel.app (main, PR #30). 프리뷰에서 실제 Claude API 스모크 통과 (`docs/smoke/2026-11-24.md`), 최종 전체 리뷰 통과.
+- 남은 확인: 다른 구글 계정으로 남의 일기 URL 접근 → 404 (운영 미실시). 초안 도중 이탈 후 서버 저장이 Vercel에서 끝까지 되는지 (미확인, 필요하면 next/server `after()`).
+- 미뤄 둔 작은 이슈 목록은 최종 리뷰 분류 기준 "나중에 해도 됨"만 남음 (빈 질문 재시도 시 사용량 1회 추가 차감 등).
+- 배포: `beta` 푸시 → Vercel 프리뷰 자동, `main` 머지 → 운영 자동. CLI 수동 배포는 항상 `vercel deploy --target preview`.
 
 ## 인계 (3번 실패 시 작성)
 - 이슈:
