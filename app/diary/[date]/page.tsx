@@ -40,9 +40,10 @@ export default async function DiaryPage({
         initialThemeId={data.theme_id ?? DEFAULT_THEME_ID}
         initialFontId={data.font_id ?? DEFAULT_FONT_ID}
         autoDraft={data.status === "in_progress"}
+        hasLog={msgs.length > 0}
       />
       {msgs.length > 0 && (
-        <details className={css.log}>
+        <details id="diary-log" className={css.log}>
           <summary>대화 기록</summary>
           {msgs.map((m) => (
             <p key={m.id} data-role={m.role}>

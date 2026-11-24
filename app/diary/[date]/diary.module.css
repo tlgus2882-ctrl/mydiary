@@ -13,7 +13,7 @@
   line-height: var(--diary-line-height);
   box-shadow: 0 1px 6px rgb(0 0 0 / 0.15);
 }
-.date { font-size: 13px; opacity: 0.7; margin: 0 0 6px; font-weight: normal; }
+.date { display: inline-block; font-size: 13px; opacity: 0.7; margin: 0 0 6px; font-weight: normal; }
 .field { display: block; }
 .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .title, .body {
@@ -32,3 +32,7 @@
 .save:hover:not(:disabled) { background: #9c5e2e; }
 .msg { font-size: 14px; color: var(--muted); }
 .link { padding: 0; border: 0; background: none; font: inherit; text-decoration: underline; color: inherit; }
+.logLink { font-size: 13px; margin-left: 8px; color: inherit; }
+.toggle { align-self: flex-start; }
+@media (min-width: 768px) { .toggle { display: none; } }
+.redo { font-size: 13px; margin-left: 12px; }

@@ -55,7 +55,7 @@ test("좁은 화면에서는 꾸미기가 접혀 있고, 글씨 크기가 저장
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   const body = page.getByLabel("본문");
   const before = await body.evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
-  await page.getByRole("radiogroup", { name: "글씨 크기" }).getByText("크게").click();
+  await page.getByRole("radio", { name: "크게" }).check();
   expect(await body.evaluate((e) => parseFloat(getComputedStyle(e).fontSize))).toBeGreaterThan(before);
   await page.reload();
   await page.getByRole("button", { name: "꾸미기" }).click();
