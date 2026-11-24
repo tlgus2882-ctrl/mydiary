@@ -80,7 +80,7 @@ export async function askNextQuestion(
     const n = history.filter((t) => t.role === "assistant").length;
     return { ready: n >= 3, stream: oneShot(`그때 기분이 어떠셨어요? (가짜 질문 ${n})`) };
   }
-  const reader = claudeText(QUESTION_SYSTEM, toMessages(history), 400).getReader();
+  const reader = claudeText(QUESTION_SYSTEM, toMessages(history), 4000) // thinking tokens count toward max_tokens (#46).getReader();
   let buf = "";
   for (;;) {
     const { done, value } = await reader.read();
@@ -109,5 +109,5 @@ export async function askNextQuestion(
 export function writeDraft(history: Turn[]): ReadableStream<string> {
   if (isFake()) return oneShot("가짜 제목\n가짜 본문");
   // The user may stop right after a question; current models reject an assistant-final conversation (prefill).
-  return claudeText(DRAFT_SYSTEM, toMessages(history, "(대화를 마칩니다. 위 대화로 일기를 써 주세요.)"), 1500);
+  return claudeText(DRAFT_SYSTEM, toMessages(history, "(대화를 마칩니다. 위 대화로 일기를 써 주세요.)"), 16000);
 }
