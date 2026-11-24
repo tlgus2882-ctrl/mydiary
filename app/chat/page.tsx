@@ -4,6 +4,7 @@ import type { Turn } from "@/lib/claude/protocol";
 import { findCurrentDiary } from "@/lib/conversation/diary";
 import { FIRST_QUESTION } from "@/lib/conversation/rules";
 import { previousDate } from "@/lib/date";
+import { daysSinceLastDiary } from "@/lib/welcome";
 import { NavLinks } from "@/components/NavLinks";
 import { requireUser } from "@/lib/supabase/server";
 import { ChatView } from "./ChatView";
@@ -33,10 +34,18 @@ export default async function ChatPage() {
       unanswered = { id: last.client_turn_id, text: last.content };
     }
   }
+  const { data: last } = await supabase
+    .from("diaries")
+    .select("entry_date")
+    .lt("entry_date", date)
+    .order("entry_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const gap = daysSinceLastDiary(last?.entry_date ?? null, date);
   return (
     <>
       <NavLinks />
-      <ChatView key={date} email={user.email ?? ""} initialTurns={turns} unanswered={unanswered} diaryDate={diary?.entry_date ?? null} />
+      <ChatView key={date} email={user.email ?? ""} initialTurns={turns} unanswered={unanswered} diaryDate={diary?.entry_date ?? null} welcomeBack={gap !== null && gap >= 2} />
     </>
   );
 }

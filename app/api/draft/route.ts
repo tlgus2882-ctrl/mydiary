@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   const user = auth.user;
   if (!user) return json({ error: "unauthorized" }, 401);
 
-  const { date } = ((await req.json().catch(() => null)) ?? {}) as Record<string, unknown>;
+  const { date, regenerate } = ((await req.json().catch(() => null)) ?? {}) as Record<string, unknown>;
   if (typeof date !== "string") return json({ reason: "bad_date" }, 400);
 
   // RLS scopes this to the user's own diaries
@@ -22,7 +22,11 @@ export async function POST(req: Request) {
   const diary = found.data;
   if (!diary) return json({ reason: "not_found" }, 404);
   // a diary with nothing in it (failed draft, or saved empty) may be regenerated; nothing else may be
-  const retry = (diary.status === "drafted" || diary.status === "saved") && diary.title === "" && diary.body === "";
+  // with regenerate:true (the user confirmed in the UI) a diary that has text may be replaced too
+  const done = diary.status === "drafted" || diary.status === "saved";
+  const empty = diary.title === "" && diary.body === "";
+  const overwrite = regenerate === true && done && !empty;
+  const retry = done && (empty || overwrite);
   if (diary.status !== "in_progress" && !retry) return json({ reason: "not_in_progress" }, 409);
 
   const { data, error } = await supabase.from("diary_messages").select("role, content").eq("diary_id", diary.id).order("seq");
@@ -34,12 +38,12 @@ export async function POST(req: Request) {
   const store = async (title: string, body: string) => {
     // only if the diary is still as this request read it: a diary the user has since edited or saved is left alone
     let q = supabase.from("diaries").update({ title, body, status: "drafted" }).eq("id", diary.id).eq("status", diary.status);
-    if (retry) q = q.eq("title", "").eq("body", "");
+    if (retry) q = q.eq("title", diary.title).eq("body", diary.body);
     const { error } = await q;
     if (error) throw error;
   };
   const fallback = async () => {
-    await store("", "");
+    if (!overwrite) await store("", ""); // never blank the text the user already has
     return json({ fallback: true }, 200);
   };
 
@@ -81,7 +85,7 @@ export async function POST(req: Request) {
         await store(title, body);
         if (!gone) controller.close();
       } catch (e) {
-        if (!claudeDone) await store("", "").catch(() => {});
+        if (!claudeDone && !overwrite) await store("", "").catch(() => {});
         if (!gone) controller.error(e);
       }
     },
