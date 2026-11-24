@@ -108,12 +108,19 @@ export function Editor({ id, date, initialTitle, initialBody, autoDraft, initial
       {/* after the picker's subset links, so for the selected font the full CSS wins (same family name) */}
       <link key={font.id} rel="stylesheet" href={fontCssUrl(font)} />
       <div data-testid="diary-page" className={css.page} style={{ ...theme.vars, fontFamily: font.family, "--font-scale": font.scale * size.scale } as React.CSSProperties}>
+        <div className={css.head}>
         <h1 className={css.date}>{date}</h1>
         {hasLog && (
           <a href="#diary-log" className={css.logLink} onClick={openLog}>
             대화 기록 보기
           </a>
         )}
+        {!drafting && !canDraft && (title || body) && (
+          <button type="button" className={`${css.link} ${css.redo}`} onClick={() => void draft(true)}>
+            초안 다시 만들기
+          </button>
+        )}
+        </div>
         {drafting && <p role="status" className={css.status}>초안을 쓰는 중…</p>}
         {failed && (
           <p role="alert" className={css.status}>
@@ -123,11 +130,6 @@ export function Editor({ id, date, initialTitle, initialBody, autoDraft, initial
             </button>
             해 보세요.
           </p>
-        )}
-        {!drafting && !canDraft && (title || body) && (
-          <button type="button" className={`${css.link} ${css.redo}`} onClick={() => void draft(true)}>
-            초안 다시 만들기
-          </button>
         )}
         {canDraft && !failed && (
           <button type="button" className={css.link} onClick={() => void draft()}>
