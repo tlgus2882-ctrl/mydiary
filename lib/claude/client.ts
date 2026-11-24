@@ -35,13 +35,26 @@ function claudeText(system: string, history: Turn[], maxTokens: number): Readabl
     system,
     messages: toMessages(history),
   });
+  // The SDK can emit end after error/abort (and after our cancel); the controller throws if touched twice.
+  let settled = false;
   return new ReadableStream({
     start(c) {
-      stream.on("text", (t) => c.enqueue(t));
-      stream.on("end", () => c.close());
-      stream.on("error", (e) => c.error(e));
+      stream.on("text", (t) => {
+        if (!settled) c.enqueue(t);
+      });
+      stream.on("end", () => {
+        if (settled) return;
+        settled = true;
+        c.close();
+      });
+      stream.on("error", (e) => {
+        if (settled) return;
+        settled = true;
+        c.error(e);
+      });
     },
     cancel() {
+      settled = true;
       stream.abort();
     },
   });
