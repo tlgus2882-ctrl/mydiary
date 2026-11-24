@@ -1,0 +1,6 @@
+.main { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.card { width: 100%; max-width: 360px; padding: 36px 28px; text-align: center; display: grid; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 2px 12px rgb(80 60 30 / 0.08); }
+.name { font-size: 28px; }
+.desc { color: var(--muted); margin-bottom: 10px; }
+.btn { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); padding: 12px 16px; }
+.btn:hover:not(:disabled) { background: #9c5e2e; }
