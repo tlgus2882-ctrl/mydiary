@@ -80,7 +80,8 @@ export async function askNextQuestion(
     const n = history.filter((t) => t.role === "assistant").length;
     return { ready: n >= 3, stream: oneShot(`그때 기분이 어떠셨어요? (가짜 질문 ${n})`) };
   }
-  const reader = claudeText(QUESTION_SYSTEM, toMessages(history), 4000) // thinking tokens count toward max_tokens (#46).getReader();
+  // thinking tokens count toward max_tokens (#46)
+  const reader = claudeText(QUESTION_SYSTEM, toMessages(history), 4000).getReader();
   let buf = "";
   for (;;) {
     const { done, value } = await reader.read();
